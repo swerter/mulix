@@ -9,9 +9,7 @@ defmodule Mulix do
   def mu_init(emails_path, db_path) do
     command = "/usr/bin/mu"
     args = ["index", "--muhome=#{db_path}", "--maildir=#{emails_path}"]
-    IO.puts "#{command} #{Enum.join(args, " ")}"
     {res, 0} = System.cmd command, args
-    IO.inspect res
   end
 
   @doc """
@@ -22,7 +20,6 @@ defmodule Mulix do
   def find(db_path, linkdir_path, query \\ "") do
     command = "/usr/bin/mu"
     args = ["find", "--muhome=#{db_path}", "--clearlinks", "--format=links", "--linksdir=#{linkdir_path}", clean_query(query)]
-    IO.puts "#{command} #{Enum.join(args, " ")}"
     case System.cmd(command, args) do
       {res, 0} -> :ok # all good, we found search query
       {res, 2} -> :ok # nothing found
@@ -31,10 +28,28 @@ defmodule Mulix do
   end
 
 
-  @doc """
-  Cleans the query so that no harm can be done.
-  """
   defp clean_query(query) do
     query |> String.replace("exec", "")
+  end
+
+
+  @doc """
+  Fetch all email addresses
+  """
+  def contacts(db_path) do
+    IO.puts db_path
+    command = "/usr/bin/mu"
+    args = ["cfind", "--format=mutt-ab", "--muhome=#{db_path}"]
+    IO.puts "#{command} #{Enum.join(args, " ")}"
+    {res, _} = System.cmd command, args
+    res
+    |> String.strip
+    |> String.split("\n")
+    |> Enum.drop(1)
+    |> Enum.map(fn(x) ->
+      parts = String.split(x, "\t")
+      IO.inspect(parts)
+      %{name: Enum.at(parts, 1), email: Enum.at(parts, 0)}
+    end)
   end
 end
