@@ -23,8 +23,11 @@ defmodule Mulix do
     command = "/usr/bin/mu"
     args = ["find", "--muhome=#{db_path}", "--clearlinks", "--format=links", "--linksdir=#{linkdir_path}", clean_query(query)]
     IO.puts "#{command} #{Enum.join(args, " ")}"
-    {res, 0} = System.cmd command, args
-    IO.inspect res
+    case System.cmd(command, args) do
+      {res, 0} -> :ok # all good, we found search query
+      {res, 2} -> :ok # nothing found
+      {res, 4} -> :ok # nothing found
+    end
   end
 
 
